@@ -14,16 +14,10 @@ return new class extends Migration
             $table->string('title');
             $table->text('description');
 
-            // Reporter info — always filled, even for guests
-            $table->string('reporter_name');
-            $table->string('reporter_email');
-            $table->string('reporter_phone', 20)->nullable();
-
-            // Only filled when submitted by a logged-in student
+            // Every ticket must belong to an authenticated user (public or student)
             $table->foreignId('user_id')
-                ->nullable()
                 ->constrained('users')
-                ->nullOnDelete();
+                ->cascadeOnDelete();
 
             $table->foreignId('category_id')
                 ->constrained('categories')
@@ -47,7 +41,7 @@ return new class extends Migration
             // Indexes for frequent queries
             $table->index('status');
             $table->index('priority');
-            $table->index('reporter_email');
+            $table->index('user_id');
             $table->index('created_at');
         });
     }
