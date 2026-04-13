@@ -12,14 +12,23 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        $data = $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'nim'      => 'nullable|string|max:20',
+        $request->validate([
+            'name'      => 'required|string|max:255',
+            'email'     => 'required|email|unique:users',
+            'password'  => 'required|string|min:8|confirmed',
+            'role'      => 'required|in:public,student',
+            // NIM is required only when registering as a student
+            'nim'       => 'required_if:role,student|nullable|string|max:20|unique:users,nim',
         ]);
  
-        $user  = User::create([...$data, 'role' => 'student']);
+        $user = User::create([
+            'name'     => $request->name,
+            'email'    => $request->email,
+            'password' => $request->password,
+            'role'     => $request->role,
+            'nim'      => $request->role === 'student' ? $request->nim : null,
+        ]);
+ 
         $token = $user->createToken('api')->plainTextToken;
  
         return response()->json([
@@ -59,5 +68,6 @@ class AuthController extends Controller
         return response()->json($request->user());
     }
 }
+
 
 ?>

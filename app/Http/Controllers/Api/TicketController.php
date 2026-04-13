@@ -27,25 +27,20 @@ class TicketController extends Controller
         return response()->json($tickets);
     }
  
-    // Public: submit a ticket (guest or student)
+    // Authenticated users only: submit a ticket
     public function store(Request $request)
     {
         $data = $request->validate([
-            'title'          => 'required|string|max:255',
-            'description'    => 'required|string',
-            'reporter_name'  => 'required|string|max:255',
-            'reporter_email' => 'required|email',
-            'reporter_phone' => 'nullable|string|max:20',
-            'category_id'    => 'required|exists:categories,id',
-            'priority'       => 'in:low,medium,high',
-            'attachments'    => 'nullable|array|max:5',
-            'attachments.*'  => 'file|max:5120|mimes:jpg,jpeg,png,pdf,doc,docx',
+            'title'         => 'required|string|max:255',
+            'description'   => 'required|string',
+            'category_id'   => 'required|exists:categories,id',
+            'priority'      => 'in:low,medium,high',
+            'attachments'   => 'nullable|array|max:5',
+            'attachments.*' => 'file|max:5120|mimes:jpg,jpeg,png,pdf,doc,docx',
         ]);
  
-        // Link to user account if logged in
-        if (auth('sanctum')->check()) {
-            $data['user_id'] = auth('sanctum')->id();
-        }
+        // Always linked to the authenticated user
+        $data['user_id'] = $request->user()->id;
  
         // Auto-assign based on category default handler
         $category = Category::find($data['category_id']);
@@ -55,7 +50,6 @@ class TicketController extends Controller
  
         $ticket = Ticket::create($data);
  
-        // Handle file attachments
         if ($request->hasFile('attachments')) {
             foreach ($request->file('attachments') as $file) {
                 $path = $file->store("tickets/{$ticket->id}", 'public');
@@ -75,12 +69,20 @@ class TicketController extends Controller
         ], 201);
     }
  
-    // Public: track ticket by ticket_number (no auth needed)
-    public function track(string $ticketNumber)
+    // Authenticated: track ticket by ticket_number
+    // Public/student users can only see their own tickets
+    public function track(Request $request, string $ticketNumber)
     {
         $ticket = Ticket::where('ticket_number', $ticketNumber)
             ->with(['category', 'publicResponses', 'attachments', 'statusHistories'])
             ->firstOrFail();
+ 
+        $user = $request->user();
+ 
+        // Staff/admin can see any ticket, others only their own
+        if (! $user->isStaff() && $ticket->user_id !== $user->id) {
+            return response()->json(['message' => 'Forbidden.'], 403);
+        }
  
         return response()->json($ticket);
     }
@@ -156,5 +158,6 @@ class TicketController extends Controller
         ]);
     }
 }
+
 
 ?>
