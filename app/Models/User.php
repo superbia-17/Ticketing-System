@@ -3,12 +3,14 @@
 
 namespace App\Models;
 
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -41,6 +43,12 @@ class User extends Authenticatable
         return $this->hasMany(TicketResponse::class);
     }
 
+    // Filament panel access — only staff and admin allowed
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->isStaff();
+    }
+
     // Role helpers
     public function isAdmin(): bool
     {
@@ -55,5 +63,10 @@ class User extends Authenticatable
     public function isStudent(): bool
     {
         return $this->role === 'student';
+    }
+
+    public function isPublic(): bool
+    {
+        return $this->role === 'public';
     }
 }
