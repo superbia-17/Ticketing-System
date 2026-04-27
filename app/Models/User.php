@@ -14,9 +14,7 @@ class User extends Authenticatable implements FilamentUser
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    protected $fillable = [
-        'name', 'email', 'password', 'role', 'nim',
-    ];
+    protected $fillable = ['name', 'email', 'password', 'role', 'nim'];
 
     protected $hidden = [
         'password', 'remember_token',
@@ -57,7 +55,12 @@ class User extends Authenticatable implements FilamentUser
 
     public function isStaff(): bool
     {
-        return in_array($this->role, ['admin', 'staff']);
+        return in_array($this->role, ['admin', 'staff', 'super_admin']);
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin';
     }
 
     public function isStudent(): bool

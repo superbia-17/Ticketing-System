@@ -24,6 +24,26 @@ class CategoryResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    public static function canViewAny(): bool
+    {
+        return in_array(auth()->user()->role, ['admin', 'super_admin']);
+    }
+
+    public static function canCreate(): bool
+    {
+        return in_array(auth()->user()->role, ['admin', 'super_admin']);
+    }
+
+    public static function canEdit($record): bool
+    {
+        return in_array(auth()->user()->role, ['admin', 'super_admin']);
+    }
+
+    public static function canDelete($record): bool
+    {
+        return in_array(auth()->user()->role, ['admin', 'super_admin']);
+    }
+
     public static function form(Schema $schema): Schema
     {
         return CategoryForm::configure($schema);

@@ -5,10 +5,7 @@ use Illuminate\Database\Eloquent\Model;
  
 class TicketResponse extends Model
 {
-    protected $fillable = [
-        'ticket_id', 'user_id', 'responder_name',
-        'message', 'is_internal',
-    ];
+    protected $fillable = ['ticket_id', 'user_id', 'responder_name', 'message', 'is_internal'];
  
     protected $casts = [
         'is_internal' => 'boolean',
@@ -22,6 +19,11 @@ class TicketResponse extends Model
     public function author()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function user()
+    {
+        return $this->author();
     }
  
     // Returns display name regardless of guest or user

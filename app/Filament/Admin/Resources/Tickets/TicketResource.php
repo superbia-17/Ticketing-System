@@ -37,7 +37,9 @@ class TicketResource extends Resource
 
     public static function getRelations(): array
     {
-        return [];
+        return [
+            \App\Filament\Admin\Resources\Tickets\Relations\TicketResponsesRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

@@ -35,17 +35,17 @@ class TicketForm
 
                 Section::make('Reporter')
                     ->schema([
-                        TextInput::make('submitter.name')
+                        TextInput::make('reporter_name')
                             ->label('Submitted by')
                             ->disabled()
                             ->visibleOn('edit'),
 
-                        TextInput::make('submitter.email')
+                        TextInput::make('reporter_email')
                             ->label('Email')
                             ->disabled()
                             ->visibleOn('edit'),
 
-                        TextInput::make('submitter.nim')
+                        TextInput::make('reporter_nim')
                             ->label('NIM')
                             ->disabled()
                             ->visibleOn('edit'),
@@ -81,11 +81,15 @@ class TicketForm
                         Select::make('assigned_to')
                             ->label('Assign to')
                             ->options(
-                                User::whereIn('role', ['staff', 'admin'])
+                                User::whereIn('role', ['staff', 'admin', 'super_admin'])
                                     ->pluck('name', 'id')
                             )
                             ->searchable()
                             ->nullable(),
+
+                        Toggle::make('allow_user_reply')
+                            ->label('Allow User to Reply')
+                            ->default(false),
                     ])
                     ->columns(2),
             ]);
