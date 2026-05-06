@@ -1,89 +1,138 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-4xl mx-auto">
-        <div class="mb-6">
-            <a href="{{ route('tickets.my') }}"
-               class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                ← Back to My Tickets
-            </a>
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Header & Navigasi -->
+    <div class="flex items-center justify-between">
+        <a href="{{ route('tickets.my') }}" class="inline-flex items-center gap-2 text-sm font-bold text-gray-500 hover:text-amber-600 transition-colors group">
+            <i class="fas fa-arrow-left transition-transform group-hover:-translate-x-1"></i> 
+            Kembali ke Daftar Tiket
+        </a>
+        <div class="flex gap-2">
+            @php
+                $statusClasses = [
+                    'open' => 'bg-blue-50 text-blue-600 border-blue-100',
+                    'in_progress' => 'bg-amber-50 text-amber-600 border-amber-100',
+                    'resolved' => 'bg-green-50 text-green-600 border-green-100',
+                    'closed' => 'bg-gray-100 text-gray-500 border-gray-200'
+                ];
+            @endphp
+            <span class="{{ $statusClasses[$ticket->status] ?? 'bg-gray-50 text-gray-500' }} border px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest">
+                Status: {{ str_replace('_', ' ', $ticket->status) }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Detail Utama Tiket -->
+    <div class="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+        <div class="bg-black p-6 md:p-8 text-white">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <span class="text-[10px] font-black text-amber-400 uppercase tracking-[0.3em]">ID Tiket: {{ $ticket->ticket_number }}</span>
+                    <h1 class="text-2xl font-black tracking-tight mt-1">{{ $ticket->title }}</h1>
+                </div>
+                <div class="text-left md:text-right">
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Dibuat Pada</p>
+                    <p class="text-sm font-bold text-amber-500">{{ $ticket->created_at->translatedFormat('d F Y, H:i') }}</p>
+                </div>
+            </div>
         </div>
 
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="px-4 py-5 sm:p-6">
-                <div class="border-b border-gray-200 pb-4 mb-4">
-                    <h1 class="text-2xl font-bold text-gray-900">{{ $ticket->title }}</h1>
-                    <p class="text-sm text-gray-500 mt-1">Ticket #{{ $ticket->ticket_number }} • {{ $ticket->created_at->format('M d, Y H:i') }}</p>
-                    <div class="flex items-center space-x-4 mt-2">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                            @if($ticket->priority === 'low') bg-green-100 text-green-800
-                            @elseif($ticket->priority === 'medium') bg-yellow-100 text-yellow-800
-                            @elseif($ticket->priority === 'high') bg-orange-100 text-orange-800
-                            @else bg-red-100 text-red-800 @endif">
-                            {{ ucfirst($ticket->priority) }} Priority
-                        </span>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                            @if($ticket->status === 'open') bg-blue-100 text-blue-800
-                            @elseif($ticket->status === 'in_progress') bg-yellow-100 text-yellow-800
-                            @elseif($ticket->status === 'resolved') bg-green-100 text-green-800
-                            @else bg-gray-100 text-gray-800 @endif">
-                            {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
-                        </span>
-                        <span class="text-sm text-gray-600">Category: {{ $ticket->category->name ?? 'N/A' }}</span>
-                    </div>
+        <div class="p-6 md:p-8 space-y-6">
+            <!-- Informasi Bar -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pb-6 border-b border-gray-50">
+                <div>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Kategori</p>
+                    <p class="text-xs font-bold text-gray-800">{{ $ticket->category->name ?? 'Umum' }}</p>
                 </div>
-
-                <div class="mb-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-2">Description</h3>
-                    <p class="text-gray-700 bg-gray-50 p-4 rounded">{{ $ticket->description }}</p>
+                <div>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Prioritas</p>
+                    <span class="text-[10px] font-black uppercase {{ $ticket->priority === 'urgent' ? 'text-red-600' : 'text-amber-600' }}">
+                        {{ ucfirst($ticket->priority) }}
+                    </span>
                 </div>
-
-                <div class="mb-6">
-                    <h3 class="text-lg font-medium text-gray-900 mb-4">Conversation</h3>
-                    @if($ticket->responses->count() > 0)
-                        <div class="space-y-4">
-                            @foreach($ticket->responses as $response)
-                                <div class="flex {{ $response->is_internal ? 'justify-start' : 'justify-end' }}">
-                                    <div class="max-w-lg px-4 py-2 rounded-lg {{ $response->is_internal ? 'bg-blue-100 text-blue-900' : 'bg-green-100 text-green-900' }}">
-                                        <p class="text-sm font-medium">{{ $response->author_name }} ({{ $response->is_internal ? 'Admin' : 'You' }})</p>
-                                        <p class="text-sm">{{ $response->message }}</p>
-                                        <p class="text-xs text-gray-500 mt-1">{{ $response->created_at->format('M d, Y H:i') }}</p>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <p class="text-gray-500">No responses yet.</p>
-                    @endif
+                <div>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Pengirim</p>
+                    <p class="text-xs font-bold text-gray-800">{{ $ticket->submitter->name ?? 'User' }}</p>
                 </div>
+                <div>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">NIM/ID</p>
+                    <p class="text-xs font-bold text-gray-800">{{ $ticket->submitter->nim ?? '-' }}</p>
+                </div>
+            </div>
 
-                @if($ticket->allow_user_reply)
-                    <div class="border-t border-gray-200 pt-6">
-                        <h3 class="text-lg font-medium text-gray-900 mb-4">Add Response</h3>
-                        <form method="POST" action="{{ route('tickets.reply', $ticket->id) }}">
-                            @csrf
-                            <div class="mb-4">
-                                <textarea name="response" rows="4" required
-                                          class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                          placeholder="Type your response here...">{{ old('response') }}</textarea>
-                                @error('response')
-                                    <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                                @enderror
-                            </div>
-                            <button type="submit"
-                                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                Send Response
-                            </button>
-                        </form>
-                    </div>
-                @else
-                    <div class="border-t border-gray-200 pt-6">
-                        <p class="text-gray-500">You cannot reply to this ticket yet. Please wait for admin response.</p>
-                    </div>
-                @endif
+            <!-- Deskripsi Masalah -->
+            <div>
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Deskripsi Masalah</p>
+                <div class="bg-gray-50 rounded-2xl p-6 text-sm text-gray-700 leading-relaxed font-medium italic border-l-4 border-amber-400">
+                    "{{ $ticket->description }}"
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Area Percakapan (Chat Style) -->
+    <div class="space-y-4">
+        <h3 class="text-xs font-black text-gray-400 uppercase tracking-[0.2em] ml-2 mt-8">Ruang Percakapan</h3>
+        
+        <div class="space-y-6">
+            @forelse($ticket->responses as $response)
+                @php
+                    $isAdmin = $response->user->isStaff(); // Menggunakan helper isStaff dari model User
+                @endphp
+                
+                <div class="flex {{ $isAdmin ? 'justify-start' : 'justify-end' }}">
+                    <div class="max-w-[85%] md:max-w-[70%] space-y-1">
+                        <div class="flex items-center gap-2 {{ $isAdmin ? 'flex-row' : 'flex-row-reverse' }} px-2">
+                            <span class="text-[10px] font-black text-gray-400 uppercase">{{ $response->user->name }}</span>
+                            <span class="text-[9px] font-bold {{ $isAdmin ? 'text-amber-600' : 'text-blue-600' }} uppercase">
+                                {{ $isAdmin ? '• Staf UPB' : '• Anda' }}
+                            </span>
+                        </div>
+                        
+                        <div class="p-4 rounded-2xl shadow-sm border {{ $isAdmin ? 'bg-white border-gray-100 rounded-tl-none text-gray-800' : 'bg-black border-black rounded-tr-none text-white' }}">
+                            <p class="text-sm leading-relaxed font-medium">{{ $response->message }}</p>
+                        </div>
+                        
+                        <p class="text-[9px] font-bold text-gray-400 px-2 {{ $isAdmin ? 'text-left' : 'text-right' }}">
+                            {{ $response->created_at->diffForHumans() }}
+                        </p>
+                    </div>
+                </div>
+            @empty
+                <div class="text-center py-10 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-100">
+                    <i class="fas fa-comments text-3xl text-gray-200 mb-3"></i>
+                    <p class="text-xs text-gray-400 font-bold uppercase tracking-widest">Belum ada balasan dari tim admin</p>
+                </div>
+            @endforelse
+        </div>
+    </div>
+
+    <!-- Form Balasan -->
+    @if($ticket->allow_user_reply && $ticket->status !== 'closed')
+        <div class="mt-10 bg-white rounded-3xl border border-gray-100 shadow-lg p-6">
+            <form method="POST" action="{{ route('tickets.reply', $ticket->id) }}" class="space-y-4">
+                @csrf
+                <div class="space-y-2">
+                    <label for="response" class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-2">Tulis Balasan</label>
+                    <textarea name="response" rows="3" required
+                              placeholder="Ketik pesan balasan Anda di sini..."
+                              class="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-6 py-4 text-sm font-medium text-gray-900 focus:bg-white focus:border-amber-400 focus:ring-0 transition-all outline-none resize-none">{{ old('response') }}</textarea>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-[#FFC107] hover:bg-amber-500 text-black font-black uppercase tracking-widest text-[10px] py-4 px-8 rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-2">
+                        <i class="fas fa-paper-plane"></i> Kirim Balasan
+                    </button>
+                </div>
+            </form>
+        </div>
+    @else
+        <div class="mt-8 bg-gray-100 rounded-2xl p-6 text-center border-2 border-dashed border-gray-200">
+            <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                <i class="fas fa-lock mr-2"></i> Percakapan telah dikunci atau menunggu respon admin.
+            </p>
+        </div>
+    @endif
 </div>
 @endsection

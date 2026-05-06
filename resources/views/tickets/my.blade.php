@@ -1,82 +1,103 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-6xl mx-auto">
-        <div class="mb-6">
-            <a href="{{ route('dashboard') }}"
-               class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                ← Back to Dashboard
+<div class="space-y-8">
+    <!-- Header Halaman -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <a href="{{ route('dashboard') }}" class="inline-flex items-center gap-2 text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-amber-600 transition-colors mb-2 group">
+                <i class="fas fa-arrow-left transition-transform group-hover:-translate-x-1"></i> 
+                Kembali
             </a>
+            <h1 class="text-2xl font-black text-gray-900 tracking-tight uppercase">Tiket Saya</h1>
+            <p class="text-gray-500 text-[10px] font-bold uppercase tracking-widest mt-1">Daftar permohonan aduan yang Anda ajukan.</p>
         </div>
-        <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="px-4 py-5 sm:p-6">
-                <div class="flex justify-between items-center mb-6">
-                    <h1 class="text-3xl font-bold text-gray-900">My Tickets</h1>
-                    <a href="{{ route('tickets.create') }}"
-                       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                        Create New Ticket
-                    </a>
-                </div>
+        <a href="{{ route('tickets.create') }}" class="flex items-center gap-2 bg-[#FFC107] hover:bg-amber-500 text-black font-black py-2.5 px-5 rounded-xl transition-all shadow-md active:scale-95 text-[10px] uppercase tracking-widest">
+            <i class="fas fa-plus-circle"></i> Buat Tiket Baru
+        </a>
+    </div>
 
-                @if(session('success'))
-                    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6" role="alert">
-                        {{ session('success') }}
-                    </div>
-                @endif
-
-                @if($tickets->count() > 0)
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                @foreach($tickets as $ticket)
-                                    <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                            <a href="{{ route('tickets.show', $ticket->id) }}" class="text-indigo-600 hover:text-indigo-900">{{ $ticket->title }}</a>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ $ticket->category->name ?? 'N/A' }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                                @if($ticket->priority === 'low') bg-green-100 text-green-800
-                                                @elseif($ticket->priority === 'medium') bg-yellow-100 text-yellow-800
-                                                @elseif($ticket->priority === 'high') bg-orange-100 text-orange-800
-                                                @else bg-red-100 text-red-800 @endif">
-                                                {{ ucfirst($ticket->priority) }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                                @if($ticket->status === 'open') bg-blue-100 text-blue-800
-                                                @elseif($ticket->status === 'in_progress') bg-yellow-100 text-yellow-800
-                                                @elseif($ticket->status === 'resolved') bg-green-100 text-green-800
-                                                @else bg-gray-100 text-gray-800 @endif">
-                                                {{ ucfirst(str_replace('_', ' ', $ticket->status)) }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ $ticket->created_at->format('M d, Y') }}
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @else
-                    <p class="text-gray-500 text-center py-8">You haven't submitted any tickets yet.</p>
-                @endif
+    <!-- Container Utama -->
+    <div class="bg-white rounded-[32px] border border-gray-100 shadow-sm overflow-hidden">
+        @if($tickets->count() > 0)
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-separate border-spacing-0">
+                    <thead>
+                        <tr class="bg-gray-50/50">
+                            <th class="px-6 py-5 text-[9px] font-black text-gray-400 uppercase tracking-widest border-b">Informasi Tiket</th>
+                            <th class="px-6 py-5 text-[9px] font-black text-gray-400 uppercase tracking-widest border-b text-center">Kategori</th>
+                            <th class="px-6 py-5 text-[9px] font-black text-gray-400 uppercase tracking-widest border-b text-center">Prioritas</th>
+                            <th class="px-6 py-5 text-[9px] font-black text-gray-400 uppercase tracking-widest border-b text-center">Status</th>
+                            <th class="px-6 py-5 text-[9px] font-black text-gray-400 uppercase tracking-widest border-b text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                        @foreach($tickets as $ticket)
+                        <tr class="hover:bg-gray-50/30 transition group">
+                            <td class="px-6 py-5">
+                                <div class="flex flex-col">
+                                    <span class="text-[9px] font-black text-amber-600 mb-1 uppercase tracking-tighter italic">{{ $ticket->ticket_number }}</span>
+                                    <a href="{{ route('tickets.show', $ticket->id) }}" class="text-sm font-bold text-gray-900 group-hover:text-amber-600 transition-colors leading-tight">
+                                        {{ $ticket->title }}
+                                    </a>
+                                    <span class="text-[9px] text-gray-400 font-bold uppercase mt-1">{{ $ticket->created_at->translatedFormat('d M Y') }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-5 text-center">
+                                <span class="text-[10px] font-black text-gray-500 bg-gray-100 px-3 py-1 rounded-lg uppercase">
+                                    {{ $ticket->category->name ?? 'Umum' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-5 text-center">
+                                @php
+                                    // Menyesuaikan kunci array dengan data di database (low, medium, high)
+                                    $priorityColors = [
+                                        'low' => 'bg-blue-50 text-blue-600 border-blue-100',
+                                        'medium' => 'bg-amber-50 text-amber-600 border-amber-100',
+                                        'high' => 'bg-red-50 text-red-600 border-red-100'
+                                    ];
+                                    $priorityLabel = [
+                                        'low' => 'Rendah',
+                                        'medium' => 'Sedang',
+                                        'high' => 'Tinggi'
+                                    ];
+                                @endphp
+                                <span class="{{ $priorityColors[$ticket->priority] ?? 'bg-gray-50 text-gray-500 border-gray-100' }} border px-3 py-1 rounded-lg text-[9px] font-black uppercase italic shadow-sm">
+                                    {{ $priorityLabel[$ticket->priority] ?? $ticket->priority }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-5 text-center">
+                                @php
+                                    $statusClasses = [
+                                        'open' => 'bg-blue-50 text-blue-600 border-blue-100',
+                                        'in_progress' => 'bg-amber-50 text-amber-600 border-amber-100',
+                                        'resolved' => 'bg-green-50 text-green-600 border-green-100',
+                                        'closed' => 'bg-gray-100 text-gray-500 border-gray-200'
+                                    ];
+                                @endphp
+                                <span class="{{ $statusClasses[$ticket->status] ?? 'bg-gray-50 text-gray-500 border-gray-100' }} border px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tighter">
+                                    {{ str_replace('_', ' ', $ticket->status) }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-5 text-right">
+                                <a href="{{ route('tickets.show', $ticket->id) }}" class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-gray-50 text-gray-400 hover:bg-black hover:text-[#FFC107] transition-all shadow-sm">
+                                    <i class="fas fa-eye text-xs"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
             </div>
-        </div>
+        @else
+            <div class="py-20 text-center">
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-gray-50 text-gray-200 rounded-[30px] mb-6 border border-dashed border-gray-200">
+                    <i class="fas fa-ticket-alt text-4xl"></i>
+                </div>
+                <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest">Belum Ada Tiket</h3>
+                <p class="text-[10px] text-gray-400 max-w-xs mx-auto font-bold uppercase mt-2">Anda belum pernah mengajukan tiket aduan.</p>
+            </div>
+        @endif
     </div>
 </div>
 @endsection
