@@ -21,6 +21,56 @@
 
     <!-- Tabel Riwayat Global -->
     <div class="bg-white rounded-[24px] border border-gray-100 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-gray-100 bg-gray-50">
+            <form method="GET" action="{{ route('tickets.all') }}" class="grid grid-cols-1 md:grid-cols-[1.5fr_1fr_1fr_1.2fr_auto] gap-4 items-end">
+                <div class="col-span-1 md:col-span-2">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Cari tiket</label>
+                    <input
+                        type="search"
+                        name="q"
+                        value="{{ request('q') }}"
+                        placeholder="Cari berdasarkan nomor, judul, atau nama pengirim"
+                        class="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3 text-sm text-gray-700 focus:outline-none focus:border-amber-400"
+                    />
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Status</label>
+                    <select name="status" class="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3 text-sm text-gray-700 focus:outline-none focus:border-amber-400">
+                        <option value="">Semua Status</option>
+                        <option value="open" {{ request('status') === 'open' ? 'selected' : '' }}>Open</option>
+                        <option value="in_progress" {{ request('status') === 'in_progress' ? 'selected' : '' }}>In Progress</option>
+                        <option value="resolved" {{ request('status') === 'resolved' ? 'selected' : '' }}>Resolved</option>
+                        <option value="closed" {{ request('status') === 'closed' ? 'selected' : '' }}>Closed</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Prioritas</label>
+                    <select name="priority" class="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3 text-sm text-gray-700 focus:outline-none focus:border-amber-400">
+                        <option value="">Semua Prioritas</option>
+                        <option value="low" {{ request('priority') === 'low' ? 'selected' : '' }}>Low</option>
+                        <option value="medium" {{ request('priority') === 'medium' ? 'selected' : '' }}>Medium</option>
+                        <option value="high" {{ request('priority') === 'high' ? 'selected' : '' }}>High</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-400">Kategori</label>
+                    <select name="category" class="w-full bg-white border border-gray-200 rounded-2xl px-4 py-3 text-sm text-gray-700 focus:outline-none focus:border-amber-400">
+                        <option value="">Semua Kategori</option>
+                        @foreach($categories as $category)
+                            <option value="{{ $category->id }}" {{ request('category') == $category->id ? 'selected' : '' }}>{{ $category->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="submit" class="w-full bg-black text-white uppercase tracking-widest text-[10px] font-black rounded-2xl py-3 hover:bg-gray-900 transition">Filter</button>
+                    <a href="{{ route('tickets.all') }}" class="w-full inline-flex items-center justify-center border border-gray-200 rounded-2xl py-3 text-[10px] font-black uppercase tracking-widest text-gray-700 hover:bg-gray-100 transition">Reset</a>
+                </div>
+            </form>
+        </div>
         @if($tickets->count() > 0)
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-separate border-spacing-0 table-fixed">
@@ -48,7 +98,9 @@
                                 </div>
                             </td>
                             <td class="px-4 py-5 text-left">
-                                <p class="text-[11px] font-black text-gray-900 uppercase tracking-tighter truncate">{{ $ticket->title }}</p>
+                                <p class="text-[11px] font-black text-gray-900 uppercase tracking-tighter truncate"><a href="{{ route('tickets.show', $ticket->id) }}" class="text-sm font-bold text-gray-900 group-hover:text-amber-600 transition-colors leading-tight">
+                                        {{ $ticket->title }}
+                                    </a></p>
                                 <p class="text-[9px] text-gray-400 font-bold italic mt-0.5 leading-none">{{ $ticket->category->name ?? 'Umum' }}</p>
                             </td>
                             <td class="px-4 py-5 text-center">

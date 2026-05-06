@@ -90,14 +90,36 @@ class TicketController extends Controller
     /**
      * Menampilkan semua tiket (Riwayat Global) dengan Pagination.
      */
-    public function all()
+    public function all(Request $request)
     {
-        // Menggunakan paginate(10) untuk tampilan per halaman
-        $tickets = Ticket::with(['submitter', 'category'])
-            ->latest()
-            ->paginate(10); 
+        $query = Ticket::with(['submitter', 'category'])->latest();
 
-        return view('tickets.all', compact('tickets'));
+        if ($search = $request->query('q')) {
+            $query->where(function ($query) use ($search) {
+                $query->where('ticket_number', 'like', "%{$search}%")
+                    ->orWhere('title', 'like', "%{$search}%")
+                    ->orWhereHas('submitter', function ($query) use ($search) {
+                        $query->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        if ($status = $request->query('status')) {
+            $query->where('status', $status);
+        }
+
+        if ($priority = $request->query('priority')) {
+            $query->where('priority', $priority);
+        }
+
+        if ($category = $request->query('category')) {
+            $query->where('category_id', $category);
+        }
+
+        $tickets = $query->paginate(10)->withQueryString();
+        $categories = \App\Models\Category::orderBy('name')->get();
+
+        return view('tickets.all', compact('tickets', 'categories'));
     }
 
     /**

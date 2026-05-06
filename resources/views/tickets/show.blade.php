@@ -109,7 +109,7 @@
     </div>
 
     <!-- Form Balasan -->
-    @if($ticket->allow_user_reply && $ticket->status !== 'closed')
+    @if(auth()->id() === $ticket->user_id && $ticket->allow_user_reply && $ticket->status !== 'closed')
         <div class="mt-10 bg-white rounded-3xl border border-gray-100 shadow-lg p-6">
             <form method="POST" action="{{ route('tickets.reply', $ticket->id) }}" class="space-y-4">
                 @csrf
@@ -126,6 +126,12 @@
                     </button>
                 </div>
             </form>
+        </div>
+    @elseif(auth()->id() !== $ticket->user_id)
+        <div class="mt-8 bg-gray-100 rounded-2xl p-6 text-center border-2 border-dashed border-gray-200">
+            <p class="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                <i class="fas fa-eye mr-2"></i> Anda dapat melihat riwayat percakapan, tetapi tidak bisa mengirim balasan karena bukan pemilik tiket.
+            </p>
         </div>
     @else
         <div class="mt-8 bg-gray-100 rounded-2xl p-6 text-center border-2 border-dashed border-gray-200">
