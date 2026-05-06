@@ -2,6 +2,8 @@
 
 namespace App\Filament\Admin\Resources\Tickets\Schemas;
 
+use App\Models\Category;
+use App\Models\Ticket;
 use App\Models\User;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -57,23 +59,52 @@ class TicketForm
                     ->schema([
                         Select::make('category_id')
                             ->relationship('category', 'name')
+                            ->live()
+                            ->afterStateUpdated(function ($state, callable $set, callable $get) {
+                                if ($state) {
+                                    $category = Category::find($state);
+
+                                    if ($category) {
+                                        $set('assigned_to', $category->assigned_to);
+
+                                        // Auto-persist category + assignee immediately so the
+                                        // assignee sees the ticket without a manual Save click
+                                        $ticketId = $get('id');
+                                        if ($ticketId) {
+                                            Ticket::where('id', $ticketId)->update([
+                                                'category_id'  => $state,
+                                                'assigned_to'  => $category->assigned_to,
+                                            ]);
+                                        }
+                                    }
+                                }
+                            })
+                            ->afterStateHydrated(function ($state, callable $set) {
+                                if ($state) {
+                                    $category = Category::find($state);
+
+                                    if ($category) {
+                                        $set('assigned_to', $category->assigned_to);
+                                    }
+                                }
+                            })
                             ->required(),
 
                         Select::make('status')
                             ->options([
-                                'open'        => 'Open',
+                                'open' => 'Open',
                                 'in_progress' => 'In Progress',
-                                'resolved'    => 'Resolved',
-                                'closed'      => 'Closed',
+                                'resolved' => 'Resolved',
+                                'closed' => 'Closed',
                             ])
                             ->required()
                             ->default('open'),
 
                         Select::make('priority')
                             ->options([
-                                'low'    => 'Low',
+                                'low' => 'Low',
                                 'medium' => 'Medium',
-                                'high'   => 'High',
+                                'high' => 'High',
                             ])
                             ->required()
                             ->default('medium'),
@@ -84,8 +115,7 @@ class TicketForm
                                 User::whereIn('role', ['staff', 'admin', 'super_admin'])
                                     ->pluck('name', 'id')
                             )
-                            ->searchable()
-                            ->nullable(),
+                            ->searchable(),
 
                         Toggle::make('allow_user_reply')
                             ->label('Allow User to Reply')
@@ -94,4 +124,4 @@ class TicketForm
                     ->columns(2),
             ]);
     }
-}
+}   

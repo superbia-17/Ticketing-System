@@ -13,9 +13,8 @@ class StatusHistory extends Model
 
     protected $fillable = [
         'ticket_id',
-        'status',
-        'changed_by',
-        'comment'
+        'old_status',
+        'new_status',
     ];
 
     /**

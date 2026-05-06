@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Category;
 
 class Ticket extends Model
 {
@@ -24,6 +25,35 @@ class Ticket extends Model
         'reporter_phone',
         'allow_user_reply'
     ];
+
+
+
+    protected static function booted(): void
+    {
+        static::creating(function ($ticket) {
+            if ($ticket->category_id && is_null($ticket->assigned_to)) {
+                $category = Category::find($ticket->category_id);
+                if ($category) {
+                    $ticket->assigned_to = $category->assigned_to;
+                }
+            }
+        });
+    }
+    /**
+     * Resolve the ticket by changing its status to 'resolved'.
+     */
+    public function resolve()
+    {
+        $oldStatus = $this->status;
+
+        $this->update(['status' => 'resolved']);
+
+        // Record status change in history
+        $this->statusHistories()->create([
+            'old_status' => $oldStatus,
+            'new_status' => 'resolved',
+        ]);
+    }
 
     /**
      * Method untuk mengecek apakah tiket sudah selesai.
