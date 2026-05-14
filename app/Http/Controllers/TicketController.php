@@ -147,13 +147,20 @@ class TicketController extends Controller
         }
 
         $request->validate([
-            'response' => 'required|string',
+            'response' => 'required_without:image|nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,jpg,png|max:5120',
         ]);
+
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('ticket-responses', 'public');
+        }
 
         TicketResponse::create([
             'ticket_id' => $ticket->id,
             'user_id' => Auth::id(),
-            'message' => $request->response,
+            'message' => $request->response ?? '',
+            'image' => $imagePath,
             'is_internal' => false,
         ]);
 

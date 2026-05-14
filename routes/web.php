@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\NotificationController;
 
 /*
 |--------------------------------------------------------------------------
@@ -39,6 +40,12 @@ Route::middleware('auth')->group(function() {
     Route::get('/tickets/{id}', [TicketController::class, 'show'])->name('tickets.show');
     Route::post('/tickets/{id}/reply', [TicketController::class, 'reply'])->name('tickets.reply');
     
+    // Notifikasi
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::get('/notifications/latest', [NotificationController::class, 'latest'])->name('notifications.latest');
+    Route::post('/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('notifications.mark-all-read');
+
     // Logout
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });

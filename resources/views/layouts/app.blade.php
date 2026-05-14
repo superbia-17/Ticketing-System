@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Sistem Tiket UPB</title>
     
     <!-- Framework & Fonts -->
@@ -14,6 +15,37 @@
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
         [x-cloak] { display: none !important; }
+
+        /* Notification bell animation */
+        @keyframes bellRing {
+            0%, 100% { transform: rotate(0deg); }
+            10% { transform: rotate(14deg); }
+            20% { transform: rotate(-14deg); }
+            30% { transform: rotate(10deg); }
+            40% { transform: rotate(-8deg); }
+            50% { transform: rotate(4deg); }
+            60% { transform: rotate(-2deg); }
+            70% { transform: rotate(0deg); }
+        }
+        .bell-ring { animation: bellRing 0.8s ease-in-out; }
+
+        @keyframes notifSlideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .notif-slide-in { animation: notifSlideIn 0.2s ease-out forwards; }
+
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+        .badge-pulse { animation: badgePulse 2s ease-in-out infinite; }
+
+        /* Notification scrollbar */
+        .notif-scroll::-webkit-scrollbar { width: 4px; }
+        .notif-scroll::-webkit-scrollbar-track { background: transparent; }
+        .notif-scroll::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 999px; }
+        .notif-scroll::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
     </style>
 </head>
 <body class="flex flex-col min-h-screen">
@@ -42,8 +74,100 @@
         </div>
 
         <!-- User Menu & Actions -->
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3">
             @auth
+            <!-- NOTIFICATION BELL -->
+            <div class="relative" x-data="notificationBell()" x-init="init()">
+                <button @click="toggleDropdown()" 
+                        class="relative flex items-center justify-center w-10 h-10 rounded-xl bg-white/20 hover:bg-white/30 transition-all border border-black/10 outline-none group"
+                        :class="{ 'bg-white/40': open }">
+                    <i class="fas fa-bell text-black text-sm transition-transform group-hover:scale-110"
+                       :class="{ 'bell-ring': hasNew }"></i>
+                    
+                    <!-- Unread Badge -->
+                    <template x-if="unreadCount > 0">
+                        <span class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] font-black min-w-[18px] h-[18px] flex items-center justify-center rounded-full shadow-lg border-2 border-[#FFC107] badge-pulse"
+                              x-text="unreadCount > 99 ? '99+' : unreadCount"></span>
+                    </template>
+                </button>
+
+                <!-- Notification Dropdown -->
+                <div x-show="open" x-cloak
+                     @click.away="open = false"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 scale-95 -translate-y-2"
+                     x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95"
+                     class="absolute right-0 mt-3 w-[360px] bg-white rounded-3xl shadow-2xl border border-gray-100 z-[60] overflow-hidden">
+                    
+                    <!-- Dropdown Header -->
+                    <div class="px-5 py-4 bg-gradient-to-r from-gray-900 to-gray-800 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-7 h-7 bg-amber-500 rounded-lg flex items-center justify-center shadow-md">
+                                <i class="fas fa-bell text-black text-[10px]"></i>
+                            </div>
+                            <div>
+                                <p class="text-xs font-black text-white uppercase tracking-wider">Notifikasi</p>
+                                <p class="text-[9px] text-gray-400 font-bold" x-text="unreadCount > 0 ? unreadCount + ' belum dibaca' : 'Semua sudah dibaca'"></p>
+                            </div>
+                        </div>
+                        <button @click.stop="markAllRead()" 
+                                x-show="unreadCount > 0"
+                                class="text-[9px] font-black text-amber-400 hover:text-amber-300 uppercase tracking-widest transition-colors">
+                            Baca Semua
+                        </button>
+                    </div>
+
+                    <!-- Notification List -->
+                    <div class="max-h-[340px] overflow-y-auto notif-scroll">
+                        <template x-if="notifications.length === 0">
+                            <div class="py-12 text-center">
+                                <div class="inline-flex items-center justify-center w-14 h-14 bg-gray-50 text-gray-200 rounded-2xl mb-4 border-2 border-dashed border-gray-200">
+                                    <i class="fas fa-bell-slash text-xl"></i>
+                                </div>
+                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Belum Ada Notifikasi</p>
+                                <p class="text-[9px] text-gray-300 font-bold mt-1">Anda akan mendapat notifikasi saat admin membalas tiket.</p>
+                            </div>
+                        </template>
+
+                        <template x-for="(notif, index) in notifications" :key="notif.id">
+                            <a :href="'{{ url('/notifications') }}/' + notif.id + '/read'"
+                               @click.prevent="goToNotif(notif)"
+                               class="block px-5 py-4 hover:bg-amber-50/50 transition-all border-b border-gray-50 last:border-0 group notif-slide-in"
+                               :class="{ 'bg-amber-50/30': !notif.read_at }"
+                               :style="'animation-delay: ' + (index * 50) + 'ms'">
+                                <div class="flex gap-3">
+                                    <!-- Icon -->
+                                    <div class="flex-shrink-0 mt-0.5">
+                                        <div class="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm"
+                                             :class="notif.read_at ? 'bg-gray-100 text-gray-400' : 'bg-gradient-to-br from-amber-400 to-amber-500 text-black'">
+                                            <i class="fas fa-reply text-[10px]"></i>
+                                        </div>
+                                    </div>
+                                    <!-- Content -->
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-[9px] font-black uppercase tracking-wider"
+                                                  :class="notif.read_at ? 'text-gray-400' : 'text-amber-600'"
+                                                  x-text="notif.ticket_number"></span>
+                                            <template x-if="!notif.read_at">
+                                                <span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
+                                            </template>
+                                        </div>
+                                        <p class="text-[11px] font-bold text-gray-800 leading-snug truncate group-hover:text-amber-700 transition-colors"
+                                           x-text="notif.responder_name + ' membalas: ' + notif.ticket_title"></p>
+                                        <p class="text-[10px] text-gray-400 mt-1 truncate italic" x-text="'\"' + notif.message_preview + '\"'"></p>
+                                        <p class="text-[9px] text-gray-300 font-bold mt-1.5 uppercase" x-text="notif.created_at"></p>
+                                    </div>
+                                </div>
+                            </a>
+                        </template>
+                    </div>
+                </div>
+            </div>
+
             <div class="relative" x-data="{ open: false }">
                 <button @click="open = !open" @click.away="open = false" 
                         class="flex items-center gap-3 bg-white/20 p-1.5 px-3 rounded-2xl hover:bg-white/30 transition outline-none border border-black/10">
@@ -158,6 +282,106 @@
             @yield('content')
         </main>
     </div>
+
+    @auth
+    <script>
+        function notificationBell() {
+            return {
+                open: false,
+                notifications: [],
+                unreadCount: 0,
+                hasNew: false,
+                pollInterval: null,
+
+                init() {
+                    this.fetchUnreadCount();
+                    // Poll every 30 seconds
+                    this.pollInterval = setInterval(() => {
+                        this.fetchUnreadCount();
+                    }, 30000);
+                },
+
+                async fetchUnreadCount() {
+                    try {
+                        const res = await fetch('{{ route("notifications.unread-count") }}');
+                        const data = await res.json();
+                        const oldCount = this.unreadCount;
+                        this.unreadCount = data.count;
+                        
+                        // Trigger bell animation if new notifications arrived
+                        if (data.count > oldCount && oldCount !== 0) {
+                            this.hasNew = true;
+                            setTimeout(() => this.hasNew = false, 1000);
+                        }
+                    } catch (e) {
+                        console.error('Failed to fetch notification count:', e);
+                    }
+                },
+
+                async fetchNotifications() {
+                    try {
+                        const res = await fetch('{{ route("notifications.latest") }}');
+                        const data = await res.json();
+                        this.notifications = data.notifications;
+                    } catch (e) {
+                        console.error('Failed to fetch notifications:', e);
+                    }
+                },
+
+                toggleDropdown() {
+                    this.open = !this.open;
+                    if (this.open) {
+                        this.fetchNotifications();
+                    }
+                },
+
+                async markAllRead() {
+                    try {
+                        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                        await fetch('{{ route("notifications.mark-all-read") }}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': token,
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                            },
+                        });
+                        this.unreadCount = 0;
+                        this.notifications = this.notifications.map(n => ({
+                            ...n,
+                            read_at: new Date().toISOString()
+                        }));
+                    } catch (e) {
+                        console.error('Failed to mark all as read:', e);
+                    }
+                },
+
+                async goToNotif(notif) {
+                    try {
+                        const token = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                        await fetch('/notifications/' + notif.id + '/read', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': token,
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                            },
+                        });
+                    } catch (e) {
+                        // Proceed with redirect even if mark-as-read fails
+                    }
+                    window.location.href = '/tickets/' + notif.ticket_id;
+                },
+
+                destroy() {
+                    if (this.pollInterval) {
+                        clearInterval(this.pollInterval);
+                    }
+                }
+            }
+        }
+    </script>
+    @endauth
 
 </body>
 </html>

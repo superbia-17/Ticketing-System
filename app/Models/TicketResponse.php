@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Model;
  
 class TicketResponse extends Model
 {
-    protected $fillable = ['ticket_id', 'user_id', 'responder_name', 'message', 'is_internal'];
+    protected $fillable = ['ticket_id', 'user_id', 'responder_name', 'message', 'image', 'is_internal'];
  
     protected $casts = [
         'is_internal' => 'boolean',

@@ -3,6 +3,8 @@
 namespace App\Filament\Admin\Resources\Tickets\Relations;
 
 use App\Models\TicketResponse;
+use App\Notifications\TicketRepliedNotification;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -10,6 +12,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -24,12 +27,20 @@ class TicketResponsesRelationManager extends RelationManager
                 Section::make('Response')
                     ->schema([
                         Textarea::make('message')
-                            ->required()
                             ->rows(4),
 
-                        Toggle::make('is_internal')
-                            ->label('Internal Note')
-                            ->default(false),
+                        FileUpload::make('image')
+                            ->label('Lampiran Gambar')
+                            ->image()
+                            ->disk('public')
+                            ->directory('ticket-responses')
+                            ->maxSize(5120)
+                            ->imagePreviewHeight('150')
+                            ->nullable(),
+
+                        // Toggle::make('is_internal')
+                        //     ->label('Internal Note')
+                        //     ->default(false),
                     ]),
             ]);
     }
@@ -43,6 +54,14 @@ class TicketResponsesRelationManager extends RelationManager
 
                 TextColumn::make('message')
                     ->limit(50),
+
+                TextColumn::make('image')
+                    ->openUrlInNewTab()
+                    ->badge()
+                    ->color('info')
+                    //->directory('ticket-responses')
+                    ->url(fn($record) => asset('/' . $record->image))
+                    ->formatStateUsing(fn () => 'Lihat Gambar'),
 
                 TextColumn::make('is_internal')
                     ->label('From Admin')
@@ -61,7 +80,16 @@ class TicketResponsesRelationManager extends RelationManager
                         return $data;
                     })
                     ->after(function () {
-                        $this->ownerRecord->update(['allow_user_reply' => true]);
+                        $ticket = $this->ownerRecord;
+                        $ticket->update(['allow_user_reply' => true]);
+
+                        // Send notification to ticket owner
+                        $latestResponse = $ticket->responses()->latest()->first();
+                        if ($latestResponse && $ticket->submitter) {
+                            $ticket->submitter->notify(
+                                new TicketRepliedNotification($ticket, $latestResponse)
+                            );
+                        }
                     }),
             ]);
     }

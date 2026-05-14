@@ -51,6 +51,7 @@ class TicketsTable
 
                 TextColumn::make('priority')
                     ->badge()
+                    ->sortable()
                     ->color(fn (string $state): string => match ($state) {
                         'low'    => 'gray',
                         'medium' => 'warning',
@@ -58,10 +59,10 @@ class TicketsTable
                         default  => 'gray',
                     }),
 
-                TextColumn::make('assignee.name')
-                    ->label('Assigned to')
-                    ->default('—')
-                    ->toggleable(),
+                // TextColumn::make('assignee.name')
+                //     ->label('Assigned to')
+                //     ->default('—')
+                //     ->toggleable(),
 
                 TextColumn::make('created_at')
                     ->dateTime('d M Y H:i')

@@ -68,9 +68,9 @@ class CategoryResource extends Resource
         ];
     }
 
-    // Admin only
+    // Admin & SuperAdmin only
     public static function canAccess(): bool
     {
-        return auth()->user()?->isAdmin() ?? false;
+        return auth()->user()?->isAdmin() || auth()->user()?->isSuperAdmin() ?? false;
     }
 }
