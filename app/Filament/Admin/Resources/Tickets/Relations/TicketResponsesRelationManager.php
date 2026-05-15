@@ -81,7 +81,7 @@ class TicketResponsesRelationManager extends RelationManager
                     })
                     ->after(function () {
                         $ticket = $this->ownerRecord;
-                        $ticket->update(['allow_user_reply' => true]);
+                        $ticket->update(['allow_user_reply' => false]);
 
                         // Send notification to ticket owner
                         $latestResponse = $ticket->responses()->latest()->first();

@@ -75,7 +75,7 @@ class TicketController extends Controller
             'reporter_email' => Auth::user()->email,
             'reporter_nim' => Auth::user()->nim,
             'reporter_phone' => Auth::user()->phone ?? null,
-            'allow_user_reply' => true,
+            'allow_user_reply' => false,
             'image' => $imagePath,
         ]);
 
