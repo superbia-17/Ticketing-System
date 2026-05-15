@@ -47,8 +47,13 @@
                 </div>
                 <div>
                     <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Prioritas</p>
-                    <span class="text-[10px] font-black uppercase {{ $ticket->priority === 'urgent' ? 'text-red-600' : 'text-amber-600' }}">
-                        {{ ucfirst($ticket->priority) }}
+                    <span class="text-[10px] font-black uppercase {{ match($ticket->priority) { 'low' => 'text-blue-600', 'high' => 'text-red-600', default => 'text-amber-600' } }}">
+                        {{ match($ticket->priority) {
+                            'low' => 'Rendah',
+                            'medium' => 'Sedang',
+                            'high' => 'Tinggi',
+                            default => ucfirst($ticket->priority)
+                        } }}
                     </span>
                 </div>
                 <div>
@@ -68,6 +73,30 @@
                     "{{ $ticket->description }}"
                 </div>
             </div>
+
+            <!-- Lampiran Gambar Tiket -->
+            @if($ticket->image)
+            <div>
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">
+                    <i class="fas fa-paperclip mr-1"></i> Lampiran Gambar
+                </p>
+                <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                    <a href="{{ asset('storage/' . $ticket->image) }}" 
+                       target="_blank"
+                       class="block group relative overflow-hidden rounded-xl inline-block">
+                        <img src="{{ asset('storage/' . $ticket->image) }}" 
+                             alt="Lampiran tiket"
+                             class="max-w-full max-h-[350px] rounded-xl object-cover border-2 border-gray-200 transition-transform group-hover:scale-[1.02]"
+                             loading="lazy">
+                        <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all rounded-xl flex items-center justify-center">
+                            <span class="opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-lg">
+                                <i class="fas fa-expand mr-1"></i> Lihat Penuh
+                            </span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+            @endif
         </div>
     </div>
 
@@ -199,9 +228,9 @@
                         }
 
                         // Validate file type
-                        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
                         if (!allowedTypes.includes(file.type)) {
-                            alert('Format gambar tidak didukung. Gunakan JPG, PNG, GIF, atau WebP.');
+                            alert('Format gambar tidak didukung. Gunakan JPG atau PNG.');
                             event.target.value = '';
                             return;
                         }

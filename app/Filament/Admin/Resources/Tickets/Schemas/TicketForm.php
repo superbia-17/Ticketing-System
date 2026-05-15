@@ -5,6 +5,7 @@ namespace App\Filament\Admin\Resources\Tickets\Schemas;
 use App\Models\Category;
 use App\Models\Ticket;
 use App\Models\User;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -32,6 +33,17 @@ class TicketForm
                         Textarea::make('description')
                             ->required()
                             ->rows(4)
+                            ->columnSpanFull(),
+
+                        Placeholder::make('image_preview')
+                            ->label('Lampiran Gambar')
+                            ->visible(fn ($record) => $record?->image)
+                            ->content(fn ($record) => new \Illuminate\Support\HtmlString(
+                                '<a href="' . asset('storage/' . $record->image) . '" target="_blank">' .
+                                '<img src="' . asset('storage/' . $record->image) . '" style="max-height:250px; border-radius:12px; border:2px solid #e5e7eb;" />' .
+                                '</a>' .
+                                '<p style="margin-top:6px; font-size:11px; color:#9ca3af;">Klik gambar untuk melihat ukuran penuh</p>'
+                            ))
                             ->columnSpanFull(),
                     ]),
 

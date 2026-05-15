@@ -48,6 +48,7 @@ class TicketController extends Controller
             'description' => 'required|string',
             'category_id' => 'required|exists:categories,id',
             'priority' => 'required|in:low,medium,high', 
+            'image' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
         ]);
 
         // --- LOGIKA GENERATOR NOMOR TIKET ---
@@ -55,6 +56,12 @@ class TicketController extends Controller
         $nextId = $latestTicket ? $latestTicket->id + 1 : 1;
         $ticketNumber = 'TKT-' . date('Y') . '-' . str_pad($nextId, 5, '0', STR_PAD_LEFT);
         // ------------------------------------
+
+        // Handle image upload
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('ticket-attachments', 'public');
+        }
 
         Ticket::create([
             'ticket_number' => $ticketNumber, 
@@ -69,6 +76,7 @@ class TicketController extends Controller
             'reporter_nim' => Auth::user()->nim,
             'reporter_phone' => Auth::user()->phone ?? null,
             'allow_user_reply' => true,
+            'image' => $imagePath,
         ]);
 
         return redirect()->route('dashboard')->with('success', 'Ticket created successfully.');

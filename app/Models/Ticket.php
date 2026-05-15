@@ -23,7 +23,8 @@ class Ticket extends Model
         'reporter_email',
         'reporter_nim',
         'reporter_phone',
-        'allow_user_reply'
+        'allow_user_reply',
+        'image'
     ];
 
 
@@ -44,14 +45,13 @@ class Ticket extends Model
      */
     public function resolve()
     {
-        $oldStatus = $this->status;
-
         $this->update(['status' => 'resolved']);
 
         // Record status change in history
         $this->statusHistories()->create([
-            'old_status' => $oldStatus,
-            'new_status' => 'resolved',
+            'status' => 'resolved',
+            'changed_by' => auth()->id() ?? $this->assigned_to ?? 1,
+            'comment' => 'Ticket resolved via action',
         ]);
     }
 

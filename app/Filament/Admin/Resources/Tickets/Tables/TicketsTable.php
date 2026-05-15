@@ -8,6 +8,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\Action;
 use Filament\Tables\Columns\BadgeColumn;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -27,6 +28,14 @@ class TicketsTable
                     ->searchable()
                     ->limit(40),
 
+                IconColumn::make('image')
+                    ->label('Image')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-paper-clip')
+                    ->falseIcon('heroicon-o-document-minus')
+                    ->color('warning')
+                    ->tooltip(fn ($state) => $state ? 'Attachment Image' : null),
+
                 TextColumn::make('submitter.name')
                     ->label('Submitted by')
                     ->searchable(),
@@ -42,8 +51,8 @@ class TicketsTable
                 TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'open'        => 'warning',
-                        'in_progress' => 'info',
+                        'open'        => 'info',
+                        'in_progress' => 'warning',
                         'resolved'    => 'success',
                         'closed'      => 'gray',
                         default       => 'gray',
@@ -53,7 +62,7 @@ class TicketsTable
                     ->badge()
                     ->sortable()
                     ->color(fn (string $state): string => match ($state) {
-                        'low'    => 'gray',
+                        'low'    => 'info',
                         'medium' => 'warning',
                         'high'   => 'danger',
                         default  => 'gray',
