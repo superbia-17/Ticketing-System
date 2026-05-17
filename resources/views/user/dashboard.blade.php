@@ -24,7 +24,7 @@
             </div>
             <div>
                 <p class="text-[9px] uppercase font-black text-gray-400 tracking-widest">Total Aduan Global</p>
-                <p class="text-xl font-black text-gray-900">{{ $allTickets->count() }}</p>
+                <p class="text-xl font-black text-gray-900">{{ $globalTicketCount }}</p>
             </div>
         </div>
 
@@ -35,7 +35,7 @@
             <div>
                 <p class="text-[9px] uppercase font-black text-gray-400 tracking-widest">Aduan Menunggu</p>
                 <p class="text-xl font-black text-gray-900">
-                    {{ $allTickets->whereIn('status', ['open', 'in_progress'])->count() }}
+                    {{ $globalOpenCount }}
                 </p>
             </div>
         </div>
@@ -47,7 +47,7 @@
             <div>
                 <p class="text-[9px] uppercase font-black text-gray-400 tracking-widest">Aduan Selesai</p>
                 <p class="text-xl font-black text-gray-900">
-                    {{ $allTickets->whereIn('status', ['resolved', 'closed'])->count() }}
+                    {{ $globalClosedCount }}
                 </p>
             </div>
         </div>

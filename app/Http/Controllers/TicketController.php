@@ -20,12 +20,20 @@ class TicketController extends Controller
         // Mengambil hanya 5 tiket terbaru secara global untuk Dashboard
         $allTickets = Ticket::with(['category', 'submitter'])
             ->latest()
-            ->take(5) 
+            ->take(5)
             ->get();
+
+        // Hitungan global untuk statistik pada kartu
+        $globalTicketCount = Ticket::count();
+        $globalOpenCount = Ticket::whereIn('status', ['open', 'in_progress'])->count();
+        $globalClosedCount = Ticket::whereIn('status', ['resolved', 'closed'])->count();
 
         return view('user.dashboard', [
             'tickets' => $myTickets,
-            'allTickets' => $allTickets
+            'allTickets' => $allTickets,
+            'globalTicketCount' => $globalTicketCount,
+            'globalOpenCount' => $globalOpenCount,
+            'globalClosedCount' => $globalClosedCount,
         ]);
     }
 
